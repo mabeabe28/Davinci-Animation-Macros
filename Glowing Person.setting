@@ -1,0 +1,129 @@
+{
+	Tools = ordered() {
+		GlowingPerson = MacroOperator {
+			CtrlWZoom = false,
+			Inputs = ordered() {
+				Input = InstanceInput { SourceOp = "GP_Footage", Source = "Input", Name = "Footage", },
+				Mask = InstanceInput { SourceOp = "GP_Cut", Source = "Foreground", Name = "Mask", },
+				BodyWhiteness = InstanceInput { SourceOp = "GP_Body", Source = "Brightness", Name = "Body Whiteness", Default = 0.7, },
+				BodySaturation = InstanceInput { SourceOp = "GP_Body", Source = "Saturation", Name = "Body Saturation", Default = 0.1, },
+				EdgeSoftness = InstanceInput { SourceOp = "GP_BodySoften", Source = "XBlurSize", Name = "Edge Softness", Default = 5, },
+				GlowSize = InstanceInput { SourceOp = "GP_GlowBlur", Source = "XBlurSize", Name = "Glow Size", Default = 28, },
+				GlowStrength = InstanceInput { SourceOp = "GP_GlowMerge", Source = "Blend", Name = "Glow Strength", Default = 1, },
+				AuraSize = InstanceInput { SourceOp = "GP_AuraBlur", Source = "XBlurSize", Name = "Aura Size", Default = 90, },
+				AuraStrength = InstanceInput { SourceOp = "GP_AuraMerge", Source = "Blend", Name = "Aura Strength", Default = 1, },
+				AuraRed = InstanceInput { SourceOp = "GP_AuraColor", Source = "GainRed", Name = "Aura Red", Default = 0.35, },
+				AuraGreen = InstanceInput { SourceOp = "GP_AuraColor", Source = "GainGreen", Name = "Aura Green", Default = 0.55, },
+				AuraBlue = InstanceInput { SourceOp = "GP_AuraColor", Source = "GainBlue", Name = "Aura Blue", Default = 1, },
+			},
+			Outputs = {
+				Output = InstanceOutput { SourceOp = "GP_GlowMerge", Source = "Output", },
+			},
+			ViewInfo = GroupInfo { Pos = { 0, 0 } },
+			Tools = ordered() {
+				GP_Footage = BrightnessContrast {
+					Inputs = {
+					},
+					ViewInfo = OperatorInfo { Pos = { 0, 99.5 } },
+				},
+				GP_Cut = MatteControl {
+					Inputs = {
+						MatteCombine = Input { Value = 4, },
+						PostMultiplyImage = Input { Value = 1, },
+						Background = Input { SourceOp = "GP_Footage", Source = "Output", },
+					},
+					ViewInfo = OperatorInfo { Pos = { 110, 66.5 } },
+				},
+				GP_Matte = BrightnessContrast {
+					Inputs = {
+						Gain = Input { Value = 0, },
+						Brightness = Input { Value = 1, },
+						ClipWhite = Input { Value = 1, },
+						PreDividePostMultiply = Input { Value = 1, },
+						Input = Input { SourceOp = "GP_Cut", Source = "Output", },
+					},
+					ViewInfo = OperatorInfo { Pos = { 220, 33.5 } },
+				},
+				GP_AuraColor = ColorGain {
+					Inputs = {
+						GainRed = Input { Value = 0.35, },
+						GainGreen = Input { Value = 0.55, },
+						GainBlue = Input { Value = 1, },
+						Input = Input { SourceOp = "GP_Matte", Source = "Output", },
+					},
+					ViewInfo = OperatorInfo { Pos = { 330, 0.5 } },
+				},
+				GP_AuraBlur = Blur {
+					Inputs = {
+						LockXY = Input { Value = 1, },
+						XBlurSize = Input { Value = 90, },
+						Input = Input { SourceOp = "GP_AuraColor", Source = "Output", },
+					},
+					ViewInfo = OperatorInfo { Pos = { 330, 66.5 } },
+				},
+				GP_AuraMerge = Merge {
+					Inputs = {
+						Blend = Input { Value = 1, },
+						Background = Input { SourceOp = "GP_Footage", Source = "Output", },
+						Foreground = Input { SourceOp = "GP_AuraBlur", Source = "Output", },
+						ApplyMode = Input { Value = FuID { "Screen" }, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 330, 99.5 } },
+				},
+				GP_Body = BrightnessContrast {
+					Inputs = {
+						Gain = Input { Value = 1.5, },
+						Brightness = Input { Value = 0.7, },
+						Saturation = Input { Value = 0.1, },
+						ClipWhite = Input { Value = 1, },
+						PreDividePostMultiply = Input { Value = 1, },
+						Input = Input { SourceOp = "GP_Cut", Source = "Output", },
+					},
+					ViewInfo = OperatorInfo { Pos = { 440, 33.5 } },
+				},
+				GP_BodySoften = Blur {
+					Inputs = {
+						LockXY = Input { Value = 1, },
+						XBlurSize = Input { Value = 5, },
+						Input = Input { SourceOp = "GP_Body", Source = "Output", },
+					},
+					ViewInfo = OperatorInfo { Pos = { 440, 66.5 } },
+				},
+				GP_BodyMerge = Merge {
+					Inputs = {
+						Background = Input { SourceOp = "GP_AuraMerge", Source = "Output", },
+						Foreground = Input { SourceOp = "GP_BodySoften", Source = "Output", },
+					},
+					ViewInfo = OperatorInfo { Pos = { 440, 99.5 } },
+				},
+				GP_GlowColor = ColorGain {
+					Inputs = {
+						GainRed = Input { Value = 1, },
+						GainGreen = Input { Value = 0.98, },
+						GainBlue = Input { Value = 0.94, },
+						Input = Input { SourceOp = "GP_Matte", Source = "Output", },
+					},
+					ViewInfo = OperatorInfo { Pos = { 550, 0.5 } },
+				},
+				GP_GlowBlur = Blur {
+					Inputs = {
+						LockXY = Input { Value = 1, },
+						XBlurSize = Input { Value = 28, },
+						Input = Input { SourceOp = "GP_GlowColor", Source = "Output", },
+					},
+					ViewInfo = OperatorInfo { Pos = { 550, 66.5 } },
+				},
+				GP_GlowMerge = Merge {
+					Inputs = {
+						Blend = Input { Value = 1, },
+						Background = Input { SourceOp = "GP_BodyMerge", Source = "Output", },
+						Foreground = Input { SourceOp = "GP_GlowBlur", Source = "Output", },
+						ApplyMode = Input { Value = FuID { "Screen" }, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 550, 99.5 } },
+				},
+			},
+		},
+	},
+	ActiveTool = "GlowingPerson",
+}

@@ -1,0 +1,530 @@
+{
+	Tools = ordered() {
+		PhotoSlide = MacroOperator {
+			CtrlWZoom = false,
+			Inputs = ordered() {
+				Input = InstanceInput { SourceOp = "PS_In", Source = "Input", Name = "Footage", },
+				SlideSize = InstanceInput { SourceOp = "PS_Place", Source = "SlideSize", Name = "Size", Default = 1, },
+				InTime = InstanceInput { SourceOp = "PS_Move", Source = "InTime", Name = "Swing In (seconds)", Default = 0.8, },
+				HoldTime = InstanceInput { SourceOp = "PS_Move", Source = "HoldTime", Name = "Hold (seconds)", Default = 2, },
+				OutTime = InstanceInput { SourceOp = "PS_Move", Source = "OutTime", Name = "Swing Out (seconds)", Default = 0.6, },
+				Swing = InstanceInput { SourceOp = "PS_Move", Source = "Swing", Name = "Swing Angle", Default = 70, },
+				Wobble = InstanceInput { SourceOp = "PS_Move", Source = "Wobble", Name = "Wobble", Default = 0, },
+				StopFPS = InstanceInput { SourceOp = "PS_StopMotion", Source = "StopFPS", Name = "Stop Motion FPS", Default = 12, },
+				Position = InstanceInput { SourceOp = "PS_Place", Source = "Center", Name = "Position", },
+				WindowRound = InstanceInput { SourceOp = "PS_WindowCut", Source = "CornerRadius", Name = "Window Roundness", Default = 0.085, },
+				TopText = InstanceInput { SourceOp = "PS_Num2", Source = "StyledText", Name = "Top Text", },
+				TopTextSize = InstanceInput { SourceOp = "PS_Num2", Source = "Size", Name = "Top Text Size", Default = 0.045, },
+				BottomText = InstanceInput { SourceOp = "PS_Num1", Source = "StyledText", Name = "Bottom Text", },
+				BottomTextSize = InstanceInput { SourceOp = "PS_Num1", Source = "Size", Name = "Bottom Text Size", Default = 0.05, },
+				ShadowStrength = InstanceInput { SourceOp = "PS_Shadow", Source = "Blend", Name = "Shadow Strength", Default = 1, },
+			},
+			Outputs = {
+				Output = InstanceOutput { SourceOp = "PS_StopMotion", Source = "Output", },
+			},
+			ViewInfo = GroupInfo { Pos = { 0, 0 } },
+			Tools = ordered() {
+				PS_Clear = BrightnessContrast {
+					Inputs = {
+						Alpha = Input { Value = 1 },
+						Input = Input {
+							SourceOp = "PS_In",
+							Source = "Output"
+						},
+						Gain = Input { Value = 0 }
+					}
+				},
+				PS_Canvas = Background {
+					Inputs = {
+						GlobalOut = Input { Value = 1667 },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" } },
+						TopLeftAlpha = Input { Value = 0 },
+						Width = Input { Value = 1500 },
+						Height = Input { Value = 1500 }
+					}
+				},
+				PS_In = BrightnessContrast {
+				},
+				PS_Fit = Letterbox {
+					Inputs = {
+						Width = Input { Value = 960 },
+						Input = Input {
+							SourceOp = "PS_In",
+							Source = "Output"
+						},
+						HiQOnly = Input { Value = 0 },
+						Mode = Input { Value = 1 },
+						Height = Input { Value = 640 }
+					}
+				},
+				PS_PhotoMask = RectangleMask {
+					Inputs = {
+						UseFrameFormatSettings = Input { Value = 1 },
+						CornerRadius = Input { Expression = "PS_WindowCut.CornerRadius" },
+						Filter = Input { Value = FuID { "Fast Gaussian" } },
+						MaskWidth = Input { Value = 3840 },
+						MaskHeight = Input { Value = 2160 },
+						PixelAspect = Input { Value = { 1, 1 } },
+						ClippingMode = Input { Value = FuID { "None" } },
+						Width = Input { Value = 0.636 },
+						Height = Input { Value = 0.4305 }
+					}
+				},
+				PS_Photo = Merge {
+					Inputs = {
+						PerformDepthMerge = Input { Value = 0 },
+						Foreground = Input {
+							SourceOp = "PS_Fit",
+							Source = "Output"
+						},
+						Background = Input {
+							SourceOp = "PS_Canvas",
+							Source = "Output"
+						},
+						EffectMask = Input {
+							SourceOp = "PS_PhotoMask",
+							Source = "Mask"
+						}
+					}
+				},
+				PS_RecessMask = RectangleMask {
+					Inputs = {
+						UseFrameFormatSettings = Input { Value = 1 },
+						CornerRadius = Input { Expression = "PS_WindowCut.CornerRadius" },
+						Filter = Input { Value = FuID { "Fast Gaussian" } },
+						Solid = Input { Value = 0 },
+						MaskWidth = Input { Value = 3840 },
+						MaskHeight = Input { Value = 2160 },
+						PixelAspect = Input { Value = { 1, 1 } },
+						ClippingMode = Input { Value = FuID { "None" } },
+						BorderWidth = Input { Value = 0.014 },
+						SoftEdge = Input { Value = 0.012 },
+						Width = Input { Value = 0.624 },
+						Height = Input { Value = 0.4185 }
+					}
+				},
+				PS_RecessDark = Background {
+					Inputs = {
+						TopLeftRed = Input { Value = 0.05 },
+						GlobalOut = Input { Value = 1667 },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" } },
+						EffectMask = Input {
+							SourceOp = "PS_RecessMask",
+							Source = "Mask"
+						},
+						TopLeftBlue = Input { Value = 0.03 },
+						TopLeftGreen = Input { Value = 0.04 },
+						Width = Input { Value = 1500 },
+						Height = Input { Value = 1500 }
+					}
+				},
+				PS_PhotoRecess = Merge {
+					Inputs = {
+						Foreground = Input {
+							SourceOp = "PS_RecessDark",
+							Source = "Output"
+						},
+						Background = Input {
+							SourceOp = "PS_Photo",
+							Source = "Output"
+						},
+						PerformDepthMerge = Input { Value = 0 },
+						Operator = Input { Value = FuID { "Atop" } },
+						Blend = Input { Value = 0.42 }
+					}
+				},
+				PS_MountMask = RectangleMask {
+					Inputs = {
+						UseFrameFormatSettings = Input { Value = 1 },
+						CornerRadius = Input { Value = 0.045 },
+						Filter = Input { Value = FuID { "Fast Gaussian" } },
+						MaskWidth = Input { Value = 3840 },
+						MaskHeight = Input { Value = 2160 },
+						PixelAspect = Input { Value = { 1, 1 } },
+						ClippingMode = Input { Value = FuID { "None" } },
+						Width = Input { Value = 0.9 },
+						Height = Input { Value = 0.9 }
+					}
+				},
+				PS_WindowCut = RectangleMask {
+					Inputs = {
+						Width = Input { Value = 0.624 },
+						CornerRadius = Input { Value = 0.085 },
+						Filter = Input { Value = FuID { "Fast Gaussian" } },
+						MaskWidth = Input { Value = 3840 },
+						PaintMode = Input { Value = FuID { "Subtract" } },
+						PixelAspect = Input { Value = { 1, 1 } },
+						ClippingMode = Input { Value = FuID { "None" } },
+						EffectMask = Input {
+							SourceOp = "PS_MountMask",
+							Source = "Mask"
+						},
+						UseFrameFormatSettings = Input { Value = 1 },
+						MaskHeight = Input { Value = 2160 },
+						Height = Input { Value = 0.4185 }
+					}
+				},
+				PS_Paper = FastNoise {
+					Inputs = {
+						Color1Red = Input { Value = 0.83 },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" } },
+						Color1Blue = Input { Value = 0.7 },
+						Color1Alpha = Input { Value = 1 },
+						Color2Red = Input { Value = 0.985 },
+						Color2Green = Input { Value = 0.965 },
+						Color2Blue = Input { Value = 0.895 },
+						Height = Input { Value = 1500 },
+						Color1Green = Input { Value = 0.8 },
+						EffectMask = Input {
+							SourceOp = "PS_WindowCut",
+							Source = "Mask"
+						},
+						Detail = Input { Value = 10 },
+						Width = Input { Value = 1500 },
+						GlobalOut = Input { Value = 1667 },
+						XScale = Input { Value = 85 },
+						Contrast = Input { Value = 1.6 }
+					}
+				},
+				PS_EdgeMask = RectangleMask {
+					Inputs = {
+						UseFrameFormatSettings = Input { Value = 1 },
+						CornerRadius = Input { Value = 0.045 },
+						Filter = Input { Value = FuID { "Fast Gaussian" } },
+						Solid = Input { Value = 0 },
+						MaskWidth = Input { Value = 3840 },
+						MaskHeight = Input { Value = 2160 },
+						PixelAspect = Input { Value = { 1, 1 } },
+						ClippingMode = Input { Value = FuID { "None" } },
+						BorderWidth = Input { Value = 0.008 },
+						SoftEdge = Input { Value = 0.012 },
+						Width = Input { Value = 0.9 },
+						Height = Input { Value = 0.9 }
+					}
+				},
+				PS_EdgeTone = Background {
+					Inputs = {
+						TopLeftRed = Input { Value = 0.52 },
+						GlobalOut = Input { Value = 1667 },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" } },
+						EffectMask = Input {
+							SourceOp = "PS_EdgeMask",
+							Source = "Mask"
+						},
+						TopLeftBlue = Input { Value = 0.34 },
+						TopLeftGreen = Input { Value = 0.46 },
+						Width = Input { Value = 1500 },
+						Height = Input { Value = 1500 }
+					}
+				},
+				PS_MountEdge = Merge {
+					Inputs = {
+						Foreground = Input {
+							SourceOp = "PS_EdgeTone",
+							Source = "Output"
+						},
+						Background = Input {
+							SourceOp = "PS_Paper",
+							Source = "Output"
+						},
+						PerformDepthMerge = Input { Value = 0 },
+						Operator = Input { Value = FuID { "Atop" } },
+						Blend = Input { Value = 0.4 }
+					}
+				},
+				PS_CutMask = RectangleMask {
+					Inputs = {
+						UseFrameFormatSettings = Input { Value = 1 },
+						CornerRadius = Input { Expression = "PS_WindowCut.CornerRadius" },
+						Filter = Input { Value = FuID { "Fast Gaussian" } },
+						Solid = Input { Value = 0 },
+						MaskWidth = Input { Value = 3840 },
+						MaskHeight = Input { Value = 2160 },
+						PixelAspect = Input { Value = { 1, 1 } },
+						ClippingMode = Input { Value = FuID { "None" } },
+						BorderWidth = Input { Value = 0.0045 },
+						SoftEdge = Input { Value = 0.0015 },
+						Width = Input { Value = 0.624 },
+						Height = Input { Value = 0.4185 }
+					}
+				},
+				PS_CutTone = Background {
+					Inputs = {
+						TopLeftRed = Input { Value = 0.33 },
+						GlobalOut = Input { Value = 1667 },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" } },
+						EffectMask = Input {
+							SourceOp = "PS_CutMask",
+							Source = "Mask"
+						},
+						TopLeftBlue = Input { Value = 0.25 },
+						TopLeftGreen = Input { Value = 0.3 },
+						Width = Input { Value = 1500 },
+						Height = Input { Value = 1500 }
+					}
+				},
+				PS_MountCut = Merge {
+					Inputs = {
+						Foreground = Input {
+							SourceOp = "PS_CutTone",
+							Source = "Output"
+						},
+						Background = Input {
+							SourceOp = "PS_MountEdge",
+							Source = "Output"
+						},
+						PerformDepthMerge = Input { Value = 0 },
+						Operator = Input { Value = FuID { "Atop" } },
+						Blend = Input { Value = 0.7 }
+					}
+				},
+				PS_EmbossDark = BrightnessContrast {
+					Inputs = {
+						Gain = Input { Value = 0.8 },
+						EffectMask = Input {
+							SourceOp = "PS_Nums",
+							Source = "Output"
+						},
+						Input = Input {
+							SourceOp = "PS_MountCut",
+							Source = "Output"
+						}
+					}
+				},
+				PS_Num1 = TextPlus {
+					Version = 1,
+					Inputs = {
+						Font = Input { Value = "Open Sans" },
+						Width = Input { Value = 1500 },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" } },
+						Center = Input { Value = { 0.5, 0.175 } },
+						HorizontalJustificationNew = Input { Value = 3 },
+						VerticalJustificationNew = Input { Value = 3 },
+						Size = Input { Value = 0.05 },
+						Style = Input { Value = "Bold" },
+						StyledText = Input { Value = "8" },
+						Softness1 = Input { Value = 1 },
+						GlobalOut = Input { Value = 1667 },
+						Wrap = Input { Value = 1 },
+						LayoutRotation = Input { Value = 1 },
+						TransformRotation = Input { Value = 1 },
+						Height = Input { Value = 1500 }
+					}
+				},
+				PS_Num2 = TextPlus {
+					Version = 1,
+					Inputs = {
+						Font = Input { Value = "Open Sans" },
+						Width = Input { Value = 1500 },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" } },
+						Center = Input { Value = { 0.5, 0.865 } },
+						HorizontalJustificationNew = Input { Value = 3 },
+						VerticalJustificationNew = Input { Value = 3 },
+						Size = Input { Value = 0.045 },
+						Style = Input { Value = "Bold" },
+						StyledText = Input { Value = "108" },
+						Softness1 = Input { Value = 1 },
+						GlobalOut = Input { Value = 1667 },
+						Wrap = Input { Value = 1 },
+						LayoutRotation = Input { Value = 1 },
+						TransformRotation = Input { Value = 1 },
+						Height = Input { Value = 1500 }
+					}
+				},
+				PS_Nums = Merge {
+					Inputs = {
+						PerformDepthMerge = Input { Value = 0 },
+						Foreground = Input {
+							SourceOp = "PS_Num2",
+							Source = "Output"
+						},
+						Background = Input {
+							SourceOp = "PS_Num1",
+							Source = "Output"
+						}
+					}
+				},
+				PS_NumsHi = Transform {
+					Inputs = {
+						Input = Input {
+							SourceOp = "PS_Nums",
+							Source = "Output"
+						},
+						Center = Input { Value = { 0.5012, 0.4988 } }
+					}
+				},
+				PS_EmbossLight = BrightnessContrast {
+					Inputs = {
+						Gain = Input { Value = 1.1 },
+						EffectMask = Input {
+							SourceOp = "PS_NumsHi",
+							Source = "Output"
+						},
+						Input = Input {
+							SourceOp = "PS_EmbossDark",
+							Source = "Output"
+						}
+					}
+				},
+				PS_Slide = Merge {
+					Inputs = {
+						PerformDepthMerge = Input { Value = 0 },
+						Foreground = Input {
+							SourceOp = "PS_EmbossLight",
+							Source = "Output"
+						},
+						Background = Input {
+							SourceOp = "PS_PhotoRecess",
+							Source = "Output"
+						}
+					}
+				},
+				PS_Place = Merge {
+					UserControls = ordered() {
+						SlideSize = {
+							LINKID_DataType = "Number",
+							INP_Default = 1,
+							ICS_ControlPage = "Controls",
+							INP_MinAllowed = 0.1,
+							INP_MaxScale = 3,
+							INP_MinScale = 0.1,
+							INPID_InputControl = "SliderControl",
+							LINKS_Name = "Slide Size"
+						}
+					},
+					Inputs = {
+						PerformDepthMerge = Input { Value = 0 },
+						Foreground = Input {
+							SourceOp = "PS_Slide",
+							Source = "Output"
+						},
+						Background = Input {
+							SourceOp = "PS_Clear",
+							Source = "Output"
+						},
+						Size = Input { Expression = "SlideSize * self.Background.OriginalHeight / 2160" }
+					}
+				},
+				PS_Move = Transform {
+					UserControls = ordered() {
+						InTime = {
+							LINKID_DataType = "Number",
+							INP_Default = 0.6,
+							ICS_ControlPage = "Controls",
+							INP_MinAllowed = 0.05,
+							INP_MaxScale = 3,
+							INP_MinScale = 0.05,
+							INPID_InputControl = "SliderControl",
+							LINKS_Name = "In (seconds)"
+						},
+						HoldTime = {
+							LINKID_DataType = "Number",
+							INP_Default = 2,
+							ICS_ControlPage = "Controls",
+							INP_MinAllowed = 0,
+							INP_MaxScale = 10,
+							INP_MinScale = 0,
+							INPID_InputControl = "SliderControl",
+							LINKS_Name = "Hold (seconds)"
+						},
+						OutTime = {
+							LINKID_DataType = "Number",
+							INP_Default = 0.5,
+							ICS_ControlPage = "Controls",
+							INP_MinAllowed = 0.05,
+							INP_MaxScale = 3,
+							INP_MinScale = 0.05,
+							INPID_InputControl = "SliderControl",
+							LINKS_Name = "Out (seconds)"
+						},
+						Swing = {
+							LINKID_DataType = "Number",
+							INP_Default = 55,
+							ICS_ControlPage = "Controls",
+							INP_MinAllowed = 0,
+							INP_MaxScale = 90,
+							INP_MinScale = 0,
+							INPID_InputControl = "SliderControl",
+							LINKS_Name = "Swing Angle"
+						},
+						Wobble = {
+							LINKID_DataType = "Number",
+							INP_Default = 0,
+							ICS_ControlPage = "Controls",
+							INP_MinAllowed = 0,
+							INP_MaxScale = 5,
+							INP_MinScale = 0,
+							INPID_InputControl = "SliderControl",
+							LINKS_Name = "Wobble"
+						},
+						Tsec = {
+							INPID_InputControl = "SliderControl",
+							ICS_ControlPage = "Controls",
+							INP_Default = 0,
+							IC_Visible = false,
+							LINKID_DataType = "Number",
+							LINKS_Name = "Clip Time"
+						}
+					},
+					Inputs = {
+						InTime = Input { Value = 0.8 },
+						Tsec = Input {
+							Value = 1.16666666666667,
+							Expression = "(time - comp.RenderStart) / comp:GetPrefs(\"Comp.FrameFormat.Rate\")"
+						},
+						Pivot = Input { Value = { 0.5, -1 } },
+						Angle = Input {
+							Value = 0.245090440669446,
+							Expression = "-Swing*(1 - (1 + 2*(min(Tsec/max(InTime,0.01),1)-1)^3 + (min(Tsec/max(InTime,0.01),1)-1)^2)) + Swing*max(0, min((Tsec-InTime-HoldTime)/max(OutTime,0.01),1))^3 + Wobble*(((sin(floor(time)*12.9898)*43758.5453) % 1) - 0.5)"
+						},
+						OutTime = Input { Value = 0.6 },
+						Swing = Input { Value = 70 },
+						Input = Input {
+							SourceOp = "PS_Place",
+							Source = "Output"
+						}
+					}
+				},
+				PS_Shadow = Shadow {
+					Inputs = {
+						Alpha = Input { Value = 0.5 },
+						ShadowOffset = Input { Value = { 0.5045, 0.4915 } },
+						Softness = Input { Value = 0.012 },
+						Input = Input {
+							SourceOp = "PS_Move",
+							Source = "Output"
+						}
+					}
+				},
+				PS_StopMotion = TimeStretcher {
+					UserControls = ordered() {
+						StopFPS = {
+							LINKID_DataType = "Number",
+							INP_Default = 12,
+							ICS_ControlPage = "Controls",
+							INP_MinAllowed = 1,
+							INP_MaxScale = 60,
+							INP_MinScale = 1,
+							INPID_InputControl = "SliderControl",
+							LINKS_Name = "Stop Motion FPS"
+						}
+					},
+					Inputs = {
+						Input = Input {
+							SourceOp = "PS_Shadow",
+							Source = "Output"
+						},
+						SampleSpread = Input { Disabled = true },
+						InterpolateBetweenFrames = Input { Value = 0 },
+						SourceTime = Input {
+							Value = 160,
+							Expression = "comp.RenderStart + floor((time - comp.RenderStart) / max(1, floor(comp:GetPrefs(\"Comp.FrameFormat.Rate\")/max(StopFPS,1) + 0.5))) * max(1, floor(comp:GetPrefs(\"Comp.FrameFormat.Rate\")/max(StopFPS,1) + 0.5))"
+						}
+					}
+				}
+			
+			},
+		},
+	},
+	ActiveTool = "PhotoSlide",
+}
