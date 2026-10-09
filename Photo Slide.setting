@@ -39,7 +39,6 @@
 				},
 				PS_Canvas = Background {
 					Inputs = {
-						GlobalOut = Input { Value = 1667 },
 						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" } },
 						TopLeftAlpha = Input { Value = 0 },
 						Width = Input { Value = 1500 },
@@ -109,7 +108,6 @@
 				PS_RecessDark = Background {
 					Inputs = {
 						TopLeftRed = Input { Value = 0.05 },
-						GlobalOut = Input { Value = 1667 },
 						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" } },
 						EffectMask = Input {
 							SourceOp = "PS_RecessMask",
@@ -184,7 +182,6 @@
 						},
 						Detail = Input { Value = 10 },
 						Width = Input { Value = 1500 },
-						GlobalOut = Input { Value = 1667 },
 						XScale = Input { Value = 85 },
 						Contrast = Input { Value = 1.6 }
 					}
@@ -208,7 +205,6 @@
 				PS_EdgeTone = Background {
 					Inputs = {
 						TopLeftRed = Input { Value = 0.52 },
-						GlobalOut = Input { Value = 1667 },
 						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" } },
 						EffectMask = Input {
 							SourceOp = "PS_EdgeMask",
@@ -254,7 +250,6 @@
 				PS_CutTone = Background {
 					Inputs = {
 						TopLeftRed = Input { Value = 0.33 },
-						GlobalOut = Input { Value = 1667 },
 						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" } },
 						EffectMask = Input {
 							SourceOp = "PS_CutMask",
@@ -307,7 +302,6 @@
 						Style = Input { Value = "Bold" },
 						StyledText = Input { Value = "8" },
 						Softness1 = Input { Value = 1 },
-						GlobalOut = Input { Value = 1667 },
 						Wrap = Input { Value = 1 },
 						LayoutRotation = Input { Value = 1 },
 						TransformRotation = Input { Value = 1 },
@@ -327,7 +321,6 @@
 						Style = Input { Value = "Bold" },
 						StyledText = Input { Value = "108" },
 						Softness1 = Input { Value = 1 },
-						GlobalOut = Input { Value = 1667 },
 						Wrap = Input { Value = 1 },
 						LayoutRotation = Input { Value = 1 },
 						TransformRotation = Input { Value = 1 },
