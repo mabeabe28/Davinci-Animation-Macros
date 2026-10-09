@@ -12,6 +12,9 @@
 				Wobble = InstanceInput { SourceOp = "PS_Move", Source = "Wobble", Name = "Wobble", Default = 0, },
 				StopFPS = InstanceInput { SourceOp = "PS_StopMotion", Source = "StopFPS", Name = "Stop Motion FPS", Default = 12, },
 				Position = InstanceInput { SourceOp = "PS_Place", Source = "Center", Name = "Position", },
+				SlideColorR = InstanceInput { SourceOp = "PS_SlideColor", Source = "TopLeftRed", Name = "Slide Color", ControlGroup = 20, Default = 0.985, },
+				SlideColorG = InstanceInput { SourceOp = "PS_SlideColor", Source = "TopLeftGreen", ControlGroup = 20, Default = 0.965, },
+				SlideColorB = InstanceInput { SourceOp = "PS_SlideColor", Source = "TopLeftBlue", ControlGroup = 20, Default = 0.895, },
 				WindowRound = InstanceInput { SourceOp = "PS_WindowCut", Source = "CornerRadius", Name = "Window Roundness", Default = 0.085, },
 				TopText = InstanceInput { SourceOp = "PS_Num2", Source = "StyledText", Name = "Top Text", },
 				TopTextSize = InstanceInput { SourceOp = "PS_Num2", Source = "Size", Name = "Top Text Size", Default = 0.045, },
@@ -366,11 +369,32 @@
 						}
 					}
 				},
+				PS_SlideColor = Background {
+					Inputs = {
+						UseFrameFormatSettings = Input { Value = 0 },
+						Width = Input { Value = 16 },
+						Height = Input { Value = 16 },
+						TopLeftRed = Input { Value = 0.985 },
+						TopLeftGreen = Input { Value = 0.965 },
+						TopLeftBlue = Input { Value = 0.895 }
+					}
+				},
+				PS_Tint = ColorGain {
+					Inputs = {
+						GainRed = Input { Expression = "PS_SlideColor.TopLeftRed/0.985" },
+						GainGreen = Input { Expression = "PS_SlideColor.TopLeftGreen/0.965" },
+						GainBlue = Input { Expression = "PS_SlideColor.TopLeftBlue/0.895" },
+						Input = Input {
+							SourceOp = "PS_EmbossLight",
+							Source = "Output"
+						}
+					}
+				},
 				PS_Slide = Merge {
 					Inputs = {
 						PerformDepthMerge = Input { Value = 0 },
 						Foreground = Input {
-							SourceOp = "PS_EmbossLight",
+							SourceOp = "PS_Tint",
 							Source = "Output"
 						},
 						Background = Input {
