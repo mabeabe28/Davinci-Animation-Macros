@@ -875,7 +875,7 @@
 							Source = "Output",
 							SourceOp = "WR_Join12"
 						},
-						Blend = Input { Expression = "iif(WR_Text1.FadeOut <= 0, 1, min(1, max(0, (comp.RenderEnd + 1 - time) / (WR_Text1.FadeOut * comp:GetPrefs(\"Comp.FrameFormat.Rate\")))))" }
+						Blend = Input { Expression = ":local fps = comp:GetPrefs(\"Comp.FrameFormat.Rate\"); local step = math.max(1, math.floor(fps / math.max(WR_StopMotion.StopFPS, 1) + 0.5)); local last = comp.RenderStart + math.floor((comp.RenderEnd - comp.RenderStart) / step) * step; if WR_Text1.FadeOut <= 0 then return 1 end; local b = math.min(1, math.max(0, (last - time) / (WR_Text1.FadeOut * fps))); return b * b * (3 - 2 * b)" }
 					}
 				},
 				WR_StopMotion = TimeStretcher {
